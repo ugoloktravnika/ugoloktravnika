@@ -391,6 +391,52 @@ footer {
     width: 100%;
   }
 }
+/* ===== Лента отзывов ===== */
+.reviews-ribbon{
+  margin-top:26px;
+  overflow:hidden;
+  padding:6px 2px 18px;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);
+  mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent);
+}
+.reviews-track{
+  display:flex;
+  width:max-content;
+  animation:ribbonMove 40s linear infinite;
+  will-change:transform;
+}
+.reviews-ribbon:hover .reviews-track{
+  animation-play-state:paused;
+}
+@keyframes ribbonMove{
+  from{transform:translateX(-50%);}
+  to{transform:translateX(0);}
+}
+.review-card{
+  width:300px;
+  flex:0 0 auto;
+  margin-right:18px;
+  padding:18px 20px;
+  border-radius:20px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(14px);
+  box-shadow:0 12px 34px rgba(0,0,0,.22);
+}
+.review-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.review-name{font-weight:700;}
+.review-rating{letter-spacing:2px;font-size:1.05rem;}
+.review-text{
+  margin:0;
+  color:rgba(244,247,238,.86);
+  line-height:1.55;
+}
 </style>
 </head>
 <body>
@@ -515,7 +561,8 @@ footer {
         <button class="submit" type="submit">Отправить отзыв</button>
              </form>
 
-      <div class="reviews-ribbon">
+      <div id="formNotice" class="notice"></div>
+<div class="reviews-ribbon">
         <div class="reviews-track" id="reviewsTrack"></div>
       </div>
     </div>
