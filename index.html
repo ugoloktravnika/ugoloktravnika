@@ -936,20 +936,57 @@ function getAnswer(raw) {
   );
 }
 
-function ask(raw) {
+// ====== НАСТРОЙКА ИИ-ПОСРЕДНИКА ======
+const WORKER_URL = "https://travnik-ai.ugoloktravnika.workers.dev/";
+let chatHistory = []; // история диалога для ИИ
+
+function addTypingIndicator(){
+  const indicator = document.createElement("div");
+  indicator.className = "msg bot";
+  indicator.id = "typingIndicator";
+  indicator.innerHTML = '<em>🌿 Помощник думает...</em>';
+  chat.appendChild(indicator);
+  chat.scrollIntoView({behavior:"smooth", block:"end"});
+}
+function removeTypingIndicator(){
+  const t = document.getElementById("typingIndicator");
+  if(t) t.remove();
+}
+
+async function askAI(messages){
+  const response = await fetch(WORKER_URL, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({messages: messages})
+  });
+  if(!response.ok) throw new Error("HTTP "+response.status);
+  const data = await response.json();
+  if(data.error) throw new Error(data.error);
+  return data.answer;
+}
+
+async function ask(raw){
   const text = raw.trim();
+  if(!text) return;
+  addMessage(text,"user");
 
-  if (!text) {
-    return;
+  chatHistory.push({role:"user", content:text});
+  if(chatHistory.length > 8) chatHistory = chatHistory.slice(-8);
+
+  addTypingIndicator();
+
+  try {
+    const answer = await askAI(chatHistory);
+    removeTypingIndicator();
+    addMessage(answer,"bot");
+    chatHistory.push({role:"assistant", content:answer});
+  } catch(err) {
+    removeTypingIndicator();
+    const fallback = getAnswer(text);
+    addMessage(fallback,"bot");
+    chatHistory = [];
+    console.warn("GigaChat недоступен, использую встроенную базу:", err);
   }
-
-  addMessage(text, "user");
-
-  const answer = getAnswer(text);
-
-  setTimeout(() => {
-    addMessage(answer, "bot");
-  }, 300);
 }
 
 document.querySelectorAll(".chip").forEach(chip => {
