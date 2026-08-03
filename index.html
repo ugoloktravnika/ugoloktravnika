@@ -36,17 +36,25 @@ body {
 
 .bg {
   z-index: -4;
-  background: linear-gradient(-45deg, #081d16, #123243, #2f1e4d, #0d3b2d);
-  background-size: 320% 320%;
-  animation: gradientMove 22s ease infinite;
+  background-image: url('background.jpg');
+  background-size: cover;
+  background-position: center;
+  transform-origin: center;
+  animation: kenBurns 40s ease-in-out infinite alternate;
+}
+
+@keyframes kenBurns {
+  from { transform: scale(1) translateY(0); }
+  to { transform: scale(1.12) translateY(-2%); }
 }
 
 .overlay {
   z-index: -3;
   background:
-    radial-gradient(circle at 18% 18%, rgba(255,255,255,.10), transparent 26%),
-    radial-gradient(circle at 78% 28%, rgba(178,134,255,.16), transparent 30%),
-    radial-gradient(circle at 45% 78%, rgba(122,240,180,.12), transparent 34%);
+    linear-gradient(rgba(5,9,15,.55), rgba(5,9,15,.72)),
+    radial-gradient(circle at 18% 18%, rgba(255,255,255,.08), transparent 26%),
+    radial-gradient(circle at 78% 28%, rgba(178,134,255,.14), transparent 30%),
+    radial-gradient(circle at 45% 78%, rgba(122,240,180,.10), transparent 34%);
 }
 
 .particles {
@@ -371,6 +379,8 @@ footer {
   line-height: 1.6;
 }
 
+  
+  
 @media (max-width: 700px) {
   .hero,
   .panel {
@@ -503,8 +513,11 @@ footer {
         <textarea id="reviewText" placeholder="Что вам понравилось? Какой ритуал попробовали?" maxlength="800" required></textarea>
 
         <button class="submit" type="submit">Отправить отзыв</button>
-        <div id="formNotice" class="notice"></div>
-      </form>
+             </form>
+
+      <div class="reviews-ribbon">
+        <div class="reviews-track" id="reviewsTrack"></div>
+      </div>
     </div>
   </section>
 </main>
@@ -1005,7 +1018,8 @@ document.getElementById("reviewForm").addEventListener("submit", async function(
       });
 
       localStorage.setItem("demoReviews", JSON.stringify(demoReviews));
-
+      saveReview({ name: name, rating: currentRating, text: text });
+      renderReviews();
       showNotice(
         "Спасибо! Пока форма работает в демо-режиме: отзыв сохранён в этом браузере. " +
         "Чтобы получать отзывы на почту, замените в коде REVIEW_EMAIL на ваш e-mail и отправьте тестовый отзыв через FormSubmit.",
@@ -1040,7 +1054,9 @@ document.getElementById("reviewForm").addEventListener("submit", async function(
       throw new Error("Send failed");
     }
 
-    showNotice("Спасибо! Отзыв отправлен. Он появится на сайте после модерации.", "success");
+        saveReview({ name: name, rating: currentRating, text: text });
+    renderReviews();
+    showNotice("Спасибо! Ваш отзыв появился в ленте ниже.", "success");
 
     this.reset();
 
@@ -1057,6 +1073,66 @@ document.getElementById("reviewForm").addEventListener("submit", async function(
     submitButton.textContent = "Отправить отзыв";
   }
 });
+
+// ===== ЛЕНТА ОТЗЫВОВ =====
+function getReviews() {
+  return JSON.parse(localStorage.getItem("siteReviews") || "[]");
+}
+
+function saveReview(review) {
+  const reviews = getReviews();
+  reviews.push(review);
+  localStorage.setItem("siteReviews", JSON.stringify(reviews));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function seedReviews() {
+  if (getReviews().length === 0) {
+    localStorage.setItem("siteReviews", JSON.stringify([
+      { name: "Анна", rating: 5, text: "Очень уютный сайт, ромашка с мелиссой — мой новый вечерний ритуал." },
+      { name: "Мария", rating: 4, text: "Красивые карточки кристаллов, спасибо!" },
+      { name: "Гость", rating: 5, text: "Помощник быстро подсказал рецепт от тревожности." }
+    ]));
+  }
+}
+
+function renderReviews() {
+  const track = document.getElementById("reviewsTrack");
+  const reviews = getReviews();
+
+  track.innerHTML = "";
+
+  if (reviews.length === 0) {
+    return;
+  }
+
+  const doubled = reviews.concat(reviews);
+
+  doubled.forEach(review => {
+    const card = document.createElement("div");
+    card.className = "review-card";
+
+    card.innerHTML =
+      "<div class=\"review-top\">" +
+      "<span class=\"review-name\">" + escapeHtml(review.name) + "</span>" +
+      "<span class=\"review-rating\">" + "🌿".repeat(review.rating) + "</span>" +
+      "</div>" +
+      "<p class=\"review-text\">" + escapeHtml(review.text) + "</p>";
+
+    track.appendChild(card);
+  });
+}
+
+seedReviews();
+renderReviews();
+  
 </script>
 
 </body>
